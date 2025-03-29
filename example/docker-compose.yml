@@ -1,0 +1,48 @@
+name: hydra
+
+networks:
+  backend:
+
+volumes:
+  data:
+
+services:
+  hydradb:
+    image: mysql:latest
+    volumes:
+    - data:/var/lib/mysql
+    networks:
+    - backend
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: yes
+      MYSQL_DATABASE: hydra
+      MYSQL_USER: hydra
+      MYSQL_PASSWORD: hydra
+
+
+  hydramig:
+    read_only: true
+    depends_on:
+    - hydradb
+    image: thunderball/hydra:v2.3.0
+    command: migrate sql up --yes "mysql://hydra:hydra@tcp(hydradb:3306)/hydra"
+    volumes:
+    - ./config/hydra.yml:/home/hydra/hydra.yml:ro
+    environment:
+      DSN: mysql://hydra:hydra@tcp(hydradb:3306)/hydra
+    networks:
+    - backend
+
+  hydra:
+    depends_on:
+    - hydradb
+    read_only: true
+    image: thunderball/hydra:v2.3.0
+    command: serve all --config hydra.yml
+    volumes:
+    - ./config/hydra.yml:/home/hydra/hydra.yml:ro
+    networks:
+    - backend
+    ports:
+    - 4444:4444/tcp
+    - 4445:4445/tcp

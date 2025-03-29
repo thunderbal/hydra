@@ -1,0 +1,4 @@
+dsn: mysql://hydra:hydra@tcp(hydradb:3306)/hydra
+secrets:
+  system:
+  - ChangeME
